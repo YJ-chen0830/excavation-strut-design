@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>深開挖水平支撐(型鋼支撐)軸力計算 | Excavation Strut Design</title>
+<script src="https://yj-chen0830.github.io/jrh-core/jrh-core.js?v=3" defer></script>
+<style>
+  :root{--navy:#0b1f3a;--navy2:#13284a;--gold:#c9a14a;--gold2:#e0bf6e;--bg:#f5f3ee;--ink:#1c2530;--line:#d8d2c2;--ok:#1a7d3a;--ng:#c0392b;}
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:"Noto Sans TC","Segoe UI",sans-serif;background:var(--bg);color:var(--ink);}
+  header{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#f5f3ee;padding:28px 32px;}
+  header h1{margin:0;font-size:22px;}
+  header span{color:var(--gold2);font-size:13px;display:block;margin-top:4px;}
+  main{max-width:1120px;margin:0 auto;padding:28px 20px 60px;}
+  .grid{display:grid;grid-template-columns:360px 1fr;gap:24px;}
+  @media(max-width:900px){.grid{grid-template-columns:1fr;}}
+  .card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:22px 24px;box-shadow:0 2px 8px rgba(0,0,0,.05);}
+  .card h2{font-size:14.5px;margin:0 0 18px;color:var(--navy);font-weight:700;display:flex;align-items:center;gap:8px;border-bottom:2px solid var(--gold);padding-bottom:10px;}
+  label{display:block;font-size:12px;color:#666;margin:10px 0 4px;font-weight:500;}
+  input,select{width:100%;padding:8px 11px;border:1.5px solid var(--line);border-radius:7px;font-size:13.5px;background:#fafaf8;}
+  input:focus,select:focus{outline:none;border-color:var(--gold);}
+  .sec{font-size:12px;font-weight:700;color:var(--navy);margin:16px 0 6px;border-left:4px solid var(--gold);padding-left:9px;letter-spacing:.04em;text-transform:uppercase;}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+  .note,.diagram-note{font-size:11.5px;color:#666;line-height:1.75;background:#f9f7f2;border-radius:6px;padding:9px 12px;margin-top:12px;}
+  .diagram-note{border-left:3px solid var(--gold);}
+  .support-table{margin-top:10px;border:1px solid var(--line);border-radius:8px;overflow:hidden;}
+  .support-head,.support-row{display:grid;grid-template-columns:68px 1fr;gap:0;}
+  .support-head div{background:var(--navy);color:#fff;font-size:12px;font-weight:600;padding:9px 10px;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .support-row div{padding:8px 10px;border-top:1px solid var(--line);display:flex;align-items:center;background:#fff;}
+  .support-row:nth-child(even) div{background:#f9f7f3;}
+  .support-row input{margin:0;}
+  button.calc-btn{margin-top:16px;width:100%;padding:12px;border:none;border-radius:8px;background:var(--navy);color:#fff;font-size:14.5px;font-weight:700;cursor:pointer;}
+  button.calc-btn:hover{background:var(--navy2);}
+  button.pro-btn{margin-top:12px;width:100%;padding:12px;border:none;border-radius:8px;background:var(--gold);color:var(--navy);font-size:14.5px;font-weight:700;cursor:pointer;}
+  button.pro-btn:hover{filter:brightness(1.08);}
+  table{width:100%;border-collapse:collapse;margin-top:10px;border:1px solid var(--line);border-radius:8px;overflow:hidden;}
+  th{background:var(--navy);color:#f5f3ee;font-weight:600;font-size:12px;padding:9px 10px;text-align:left;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  td{padding:9px 10px;font-size:13px;border-bottom:1px solid var(--line);vertical-align:top;}
+  tr:nth-child(even) td{background:#f9f7f3;}
+  .ok{color:var(--ok);font-weight:700;}
+  .ng{color:var(--ng);font-weight:700;}
+  .pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700;}
+  .pill.ok{background:rgba(26,125,58,.12);}
+  .pill.ng{background:rgba(192,57,43,.12);}
+  details.proc{margin-top:16px;border:1px solid var(--line);border-radius:8px;background:#fafaf8;overflow:hidden;}
+  details.proc summary{cursor:pointer;padding:10px 14px;font-weight:700;font-size:13px;color:var(--navy);user-select:none;list-style:none;display:flex;align-items:center;gap:6px;}
+  details.proc summary::before{content:"▶";font-size:10px;transition:transform .2s;}
+  details[open].proc summary::before{transform:rotate(90deg);}
+  details.proc pre{margin:0;padding:12px 16px 16px;font-family:"Courier New",monospace;font-size:11.5px;line-height:1.9;white-space:pre-wrap;color:#2c3e50;border-top:1px solid var(--line);}
+  .proj-section{background:#fff;border:1px solid var(--gold);border-radius:10px;padding:18px 22px;margin-bottom:20px;}
+  .proj-section h3{margin:0 0 12px;color:var(--navy);font-size:14px;font-weight:700;}
+  .proj-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  @media(max-width:600px){.proj-grid{grid-template-columns:1fr;}.row2,.row3{grid-template-columns:1fr;}}
+  .mob-tabs{display:none;}
+  @media screen and (max-width:767px){
+    .mob-tabs{display:flex;background:var(--bg);border-bottom:2px solid var(--line);margin:0 -20px 0;padding:0 20px;}
+    .mob-tab{flex:1;padding:11px 4px;text-align:center;font-size:13.5px;font-weight:700;color:#888;cursor:pointer;background:transparent;border:none;border-bottom:3px solid transparent;}
+    .mob-tab.active{color:var(--navy);border-bottom-color:var(--gold);}
+    .grid{display:block;}
+    .grid>.card{display:none;}
+    .grid>.card.mob-active{display:block;}
+  }
+  @media print{
+    header,.no-print{display:none!important;}
+    body{background:#fff;margin:0;font-size:9pt;line-height:1.5;color:#111;}
+    main{padding:0;max-width:100%!important;}
+    .grid{grid-template-columns:1fr!important;gap:10pt!important;}
+    .card{box-shadow:none!important;border:1px solid #ccc!important;border-radius:4pt!important;padding:10pt 12pt!important;break-inside:avoid;}
+    .card h2{font-size:10.5pt!important;padding-bottom:6pt!important;margin-bottom:9pt!important;}
+    label{font-size:8pt!important;margin:6pt 0 2pt!important;}
+    .sec{font-size:8pt!important;margin:10pt 0 4pt!important;}
+    .note,.diagram-note{font-size:7.5pt!important;padding:6pt 9pt!important;}
+    table{border:1px solid #bbb!important;border-radius:0!important;margin-top:6pt!important;}
+    th{font-size:8pt!important;padding:5pt 7pt!important;background:#0b1f3a!important;color:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    td{font-size:8.5pt!important;padding:5pt 7pt!important;}
+    tr:nth-child(even) td{background:#f5f5f5!important;}
+    .support-head div{font-size:8pt!important;padding:5pt 7pt!important;background:#0b1f3a!important;color:#fff!important;}
+    .support-row div{font-size:8pt!important;padding:5pt 7pt!important;}
+    details.proc{display:block!important;margin-top:10pt!important;border:1pt solid #0b1f3a!important;border-radius:4pt!important;break-inside:avoid;background:#f9f9f6!important;}
+    details.proc>summary{display:none!important;}
+    details.proc::before{content:"📋  計算過程（供第三方檢核）";display:block;font-weight:700;font-size:8pt;color:#0b1f3a;padding:6pt 10pt 4pt;border-bottom:1px solid #ccc;letter-spacing:.04em;}
+    details.proc>pre{font-size:7pt!important;line-height:1.65!important;white-space:pre-wrap!important;padding:6pt 10pt 10pt!important;color:#1a1a1a!important;font-family:"Courier New",monospace!important;}
+    .proj-section{border:1.5pt solid #0b1f3a!important;border-radius:4pt!important;}
+    button.pro-btn,button.calc-btn{display:none!important;}
+    @page{margin:15mm 12mm;size:A4;}
+  }
+</style>
+</head>
+<body data-tool="esd">
+<header>
+  <a href="https://yj-chen0830.github.io/engineering-hub/" style="color:var(--gold2);font-size:12.5px;text-decoration:none;display:inline-block;margin-bottom:8px;">← 返回工程計算中心</a>
+  <h1>🏗️ 開挖支撐軸力與挫屈檢核</h1>
+  <span>Peck (1969) 表觀土壓力包絡線 · 多層水平支撐 tributary area 分配 · 型鋼支撐 Euler 挫屈檢核</span>
+</header>
+<main>
+
+<div class="proj-section no-print" id="projSection">
+  <h3>📁 專案資訊（列印時帶入計算書封面）</h3>
+  <div class="proj-grid">
+    <div><label>工程名稱</label><input id="pj-name" placeholder="○○捷運連續壁開挖工程"></div>
+    <div><label>工程地點</label><input id="pj-loc" placeholder="○○市○○區"></div>
+    <div><label>承造廠商</label><input id="pj-contractor" placeholder="○○營造股份有限公司"></div>
+    <div><label>文件編號</label><input id="pj-docno" placeholder="ESD-CAL-001"></div>
+    <div><label>計算者</label><input id="pj-calc" placeholder="姓名"></div>
+    <div><label>審核者</label><input id="pj-review" placeholder="姓名"></div>
+    <div><label>計算日期</label><input id="pj-date" type="date"></div>
+  </div>
+</div>
+
+<div class="mob-tabs">
+  <button class="mob-tab active" onclick="switchMobTab('esd-in',this)">📋 輸入參數</button>
+  <button class="mob-tab" id="mobTab-esd-r" onclick="switchMobTab('esd-r',this)">📊 計算結果</button>
+</div>
+
+<div class="grid">
+  <div class="card mob-active" data-tab="esd-in">
+    <h2>開挖與支撐條件</h2>
+
+    <div class="row2">
+      <div><label>開挖深度 H (m)</label><input id="esd-H" type="number" value="12" step="0.1" min="1"></div>
+      <div><label>土壤單位重 γ (kN/m³)</label><input id="esd-gamma" type="number" value="18" step="0.1" min="1"></div>
+    </div>
+
+    <div class="row2">
+      <div>
+        <label>土壤類型</label>
+        <select id="esd-soil" onchange="updateSoilUI()">
+          <option value="sand">砂土</option>
+          <option value="softClay">軟黏土</option>
+          <option value="hardClay">硬黏土</option>
+        </select>
+      </div>
+      <div><label>支撐層數 n</label><input id="esd-n" type="number" value="3" step="1" min="1" max="8" onchange="renderSupportRows(true)"></div>
+    </div>
+
+    <div id="sand-fields">
+      <label>摩擦角 φ (°)</label>
+      <input id="esd-phi" type="number" value="30" step="1" min="1" max="50">
+    </div>
+
+    <div id="soft-fields" style="display:none">
+      <div class="row2">
+        <div><label>不排水剪力強度 Su (kPa)</label><input id="esd-su" type="number" value="35" step="1" min="1"></div>
+        <div><label>Ns 分段上限係數 Cmax (=0.2~0.4)</label><input id="esd-soft-cap" type="number" value="0.30" step="0.05" min="0.2" max="0.4"></div>
+      </div>
+    </div>
+
+    <div id="hard-fields" style="display:none">
+      <label>硬黏土包絡線係數 C (=0.2~0.4)</label>
+      <input id="esd-hard-c" type="number" value="0.30" step="0.05" min="0.2" max="0.4">
+    </div>
+
+    <div class="row2">
+      <div><label>支撐水平間距 S (m，支柱間距)</label><input id="esd-sh" type="number" value="6" step="0.1" min="0.5"></div>
+      <div><label>安全係數 FSbuckling</label><input id="esd-fs" type="number" value="1.67" step="0.01" min="1.1"></div>
+    </div>
+
+    <div class="sec">各層支撐深度</div>
+    <div class="support-table" id="supportTable"></div>
+
+    <div class="sec">支撐斷面與挫屈參數</div>
+    <div class="row3">
+      <div><label>斷面積 A (cm²)</label><input id="esd-A" type="number" value="90" step="1" min="1"></div>
+      <div><label>迴轉半徑 r (cm)</label><input id="esd-r" type="number" value="5" step="0.1" min="0.1"></div>
+      <div><label>無側撐長度 Lk (m)</label><input id="esd-Lk" type="number" value="4" step="0.1" min="0.1"></div>
+    </div>
+    <div class="row2">
+      <div><label>鋼材降伏強度 Fy (MPa)</label><input id="esd-Fy" type="number" value="250" step="1" min="1"></div>
+      <div><label>彈性模數 E (MPa)</label><input id="esd-E" type="number" value="200000" step="1000" min="1000"></div>
+    </div>
+
+    <button class="calc-btn" onclick="calcESD()">計算支撐軸力與挫屈</button>
+    <div class="note">預設範例：H=12m、砂土 φ=30°、γ=18kN/m³、3 層支撐深度 3/6/9m、水平間距 6m、A=90cm²、r=5cm、Lk=4m、Fy=250MPa、E=200000MPa、FS=1.67。</div>
+    <div class="diagram-note">Peck 表觀土壓力包絡線於本工具以「全深度均佈壓力」處理：砂土採矩形包絡線 `Pa = 0.65KaγH`；軟黏土依 `Ns = γH/Su` 分段選用 `0.2γH ~ 0.4γH` 或 `γH - 4Su` 上限；硬黏土採 `CγH`。各層支撐反力由相鄰層中點切分 tributary band，再乘上支撐水平間距換算單支撐軸力。</div>
+  </div>
+
+  <div class="card" data-tab="esd-r">
+    <h2>表觀土壓、各層軸力與挫屈檢核</h2>
+    <div id="esd-result"><p style="color:#888">尚未計算</p></div>
+    <details class="proc" id="esd-proc" style="display:none">
+      <summary>📋 計算過程（供第三方檢核）</summary>
+      <pre id="esd-proc-text"></pre>
+    </details>
+    <button class="pro-btn no-print" onclick="openPro()">📄 產出計算書 PDF</button>
+  </div>
+</div>
+
+</main>
+<script>
+function switchMobTab(name,btn){
+  btn.parentElement.querySelectorAll('.mob-tab').forEach(function(t){t.classList.remove('active');});
+  btn.classList.add('active');
+  btn.parentElement.nextElementSibling.querySelectorAll('.card').forEach(function(c){
+    c.classList.toggle('mob-active',c.dataset.tab===name);
+  });
+}
+function openPro(){ JRH.checkEmail(function(){ jrhPrint('深開挖水平支撐(型鋼支撐)軸力計算書'); }); }
+function v(id){return parseFloat(document.getElementById(id).value)||0;}
+function f1(x){return x.toFixed(1);}
+function f2(x){return x.toFixed(2);}
+function f3(x){return x.toFixed(3);}
+function clamp(x,min,max){return Math.max(min,Math.min(max,x));}
+function deg2rad(d){return d*Math.PI/180;}
+
+function updateSoilUI(){
+  var soil=document.getElementById('esd-soil').value;
+  document.getElementById('sand-fields').style.display=soil==='sand'?'':'none';
+  document.getElementById('soft-fields').style.display=soil==='softClay'?'':'none';
+  document.getElementById('hard-fields').style.display=soil==='hardClay'?'':'none';
+}
+
+function renderSupportRows(resetValues){
+  var n=Math.max(1,Math.min(8,Math.round(v('esd-n'))||3));
+  document.getElementById('esd-n').value=n;
+  var H=v('esd-H')||12;
+  var host=document.getElementById('supportTable');
+  var html='<div class="support-head"><div>層次</div><div>支撐中心深度 z (m)</div></div>';
+  for(var i=1;i<=n;i++){
+    var id='esd-z'+i;
+    var old=document.getElementById(id);
+    var val=old && !resetValues ? parseFloat(old.value)||0 : H*i/(n+1);
+    html+='<div class="support-row"><div>第 '+i+' 層</div><div><input id="'+id+'" type="number" value="'+f2(val)+'" step="0.1" min="0.1" max="'+f2(H-0.1)+'"></div></div>';
+  }
+  host.innerHTML=html;
+}
+
+function getSupportDepths(n,H){
+  var list=[];
+  for(var i=1;i<=n;i++){
+    var z=v('esd-z'+i);
+    if(z<=0||z>=H){throw new Error('第 '+i+' 層支撐深度需介於 0 與 H 之間。');}
+    list.push({level:i,depth:z});
+  }
+  list.sort(function(a,b){return a.depth-b.depth;});
+  for(var j=1;j<list.length;j++){
+    if(list[j].depth<=list[j-1].depth){throw new Error('支撐深度需由淺至深遞增，且不可重複。');}
+  }
+  return list;
+}
+
+function getApparentPressure(H,gamma,soil,phi,Su,softCap,hardC){
+  var pressure=0, note='', Ka=null, Ns=null;
+  if(soil==='sand'){
+    Ka=Math.pow(Math.tan(deg2rad(45-phi/2)),2);
+    pressure=0.65*Ka*gamma*H;
+    note='砂土：Pa = 0.65KaγH，Ka = tan²(45°-φ/2)。';
+  }else if(soil==='softClay'){
+    Ns=(gamma*H)/Su;
+    softCap=clamp(softCap,0.2,0.4);
+    if(Ns<=4){
+      pressure=0.2*gamma*H;
+      note='軟黏土：Ns ≤ 4，採較低表觀壓力 0.2γH。';
+    }else if(Ns<6){
+      var c=0.2+(Ns-4)*(0.2/2);
+      pressure=c*gamma*H;
+      note='軟黏土：4 < Ns < 6，於 0.2γH 與 0.4γH 間線性插值。';
+    }else{
+      pressure=Math.min(gamma*H-4*Su,softCap*gamma*H);
+      note='軟黏土：Ns ≥ 6，採 min(γH-4Su, Cmax·γH)。';
+    }
+  }else{
+    hardC=clamp(hardC,0.2,0.4);
+    pressure=hardC*gamma*H;
+    note='硬黏土：Pa = CγH，C 介於 0.2~0.4。';
+  }
+  pressure=Math.max(0,pressure);
+  return {pressure:pressure, note:note, Ka:Ka, Ns:Ns};
+}
+
+function calcESD(){
+  try{
+    var H=v('esd-H'), gamma=v('esd-gamma'), soil=document.getElementById('esd-soil').value;
+    var phi=v('esd-phi'), Su=v('esd-su'), softCap=v('esd-soft-cap'), hardC=v('esd-hard-c');
+    var n=Math.max(1,Math.round(v('esd-n'))||1), S=v('esd-sh');
+    var A=v('esd-A'), r=v('esd-r'), Lk=v('esd-Lk'), Fy=v('esd-Fy'), E=v('esd-E'), FS=v('esd-fs');
+    if(H<=0||gamma<=0||S<=0||A<=0||r<=0||Lk<=0||Fy<=0||E<=0||FS<=1){throw new Error('請確認所有幾何與材料輸入值均為正值，且 FS > 1。');}
+    if(soil==='sand'&&phi<=0){throw new Error('砂土需輸入 φ > 0。');}
+    if(soil==='softClay'&&Su<=0){throw new Error('軟黏土需輸入 Su > 0。');}
+    var supports=getSupportDepths(n,H);
+    var pressureData=getApparentPressure(H,gamma,soil,phi,Su,softCap,hardC);
+    var Pa=pressureData.pressure;
+
+    var rows=[];
+    var maxAxial=0;
+    var totalReaction=0;
+    for(var i=0;i<supports.length;i++){
+      var upper=i===0 ? 0 : 0.5*(supports[i-1].depth+supports[i].depth);
+      var lower=i===supports.length-1 ? H : 0.5*(supports[i].depth+supports[i+1].depth);
+      var tributary=lower-upper;
+      var reaction=Pa*tributary;
+      var axial=reaction*S;
+      maxAxial=Math.max(maxAxial,axial);
+      totalReaction+=reaction;
+      rows.push({
+        level:supports[i].level,
+        depth:supports[i].depth,
+        upper:upper,
+        lower:lower,
+        tributary:tributary,
+        reaction:reaction,
+        axial:axial
+      });
+    }
+
+    var A_mm2=A*100;
+    var r_mm=r*10;
+    var Lk_mm=Lk*1000;
+    var I_mm4=A_mm2*r_mm*r_mm;
+    var Pcr=Math.PI*Math.PI*E*I_mm4/(Lk_mm*Lk_mm)/1000;
+    var Py=A_mm2*Fy/1000;
+    var Pallow=Pcr/FS;
+    var slenderness=Lk_mm/r_mm;
+    var ok=maxAxial<=Pallow;
+
+    var soilLabel=soil==='sand'?'砂土':(soil==='softClay'?'軟黏土':'硬黏土');
+    var paText='';
+    if(soil==='sand'){
+      paText='0.65 × '+f3(pressureData.Ka)+' × '+f2(gamma)+' × '+f2(H)+' = '+f2(Pa)+' kPa';
+    }else if(soil==='softClay'){
+      paText='Ns = γH/Su = '+f2(gamma)+' × '+f2(H)+' / '+f2(Su)+' = '+f2(pressureData.Ns)+'，Pa = '+f2(Pa)+' kPa';
+    }else{
+      paText=f2(clamp(hardC,0.2,0.4))+' × '+f2(gamma)+' × '+f2(H)+' = '+f2(Pa)+' kPa';
+    }
+
+    var html='';
+    html+='<table><tr><th>項目</th><th>結果</th></tr>';
+    html+='<tr><td>土壤類型 / 包絡線</td><td>'+soilLabel+'<br>'+pressureData.note+'</td></tr>';
+    html+='<tr><td>表觀土壓力 Pa</td><td>'+f2(Pa)+' kPa<br><span style="font-size:12px;color:#666">'+paText+'</span></td></tr>';
+    html+='<tr><td>總側向荷重（每延米牆）</td><td>'+f2(Pa*H)+' kN/m</td></tr>';
+    html+='<tr><td>Euler 臨界挫屈力 Pcr</td><td>'+f2(Pcr)+' kN</td></tr>';
+    html+='<tr><td>容許壓力 Pallow = Pcr / FS</td><td>'+f2(Pallow)+' kN</td></tr>';
+    html+='<tr><td>降伏軸力 Py = A·Fy（參考）</td><td>'+f2(Py)+' kN</td></tr>';
+    html+='<tr><td>細長比 λ = Lk / r</td><td>'+f1(slenderness)+'</td></tr>';
+    html+='<tr><td>最大單支撐軸力需求</td><td>'+f2(maxAxial)+' kN</td></tr>';
+    html+='<tr><td>整體判定</td><td><span class="pill '+(ok?'ok':'ng')+'">'+(ok?'OK':'NG')+'</span></td></tr>';
+    html+='</table>';
+
+    html+='<table><tr><th>支撐層</th><th>深度 z (m)</th><th>tributary 區間 (m)</th><th>分配高度 (m)</th><th>水平反力 (kN/m)</th><th>單支撐軸力 (kN)</th><th>判定</th></tr>';
+    rows.forEach(function(row){
+      var rowOK=row.axial<=Pallow;
+      html+='<tr>'+
+        '<td>第 '+row.level+' 層</td>'+
+        '<td>'+f2(row.depth)+'</td>'+
+        '<td>'+f2(row.upper)+' ~ '+f2(row.lower)+'</td>'+
+        '<td>'+f2(row.tributary)+'</td>'+
+        '<td>'+f2(row.reaction)+'</td>'+
+        '<td>'+f2(row.axial)+'</td>'+
+        '<td>'+(rowOK?'<span class="ok">OK</span>':'<span class="ng">NG</span>')+'</td>'+
+      '</tr>';
+    });
+    html+='</table>';
+    document.getElementById('esd-result').innerHTML=html;
+
+    var p='';
+    p+='━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
+    p+='  深開挖水平支撐（型鋼支撐）軸力與挫屈檢核\n';
+    p+='  方法：Peck (1969) apparent earth pressure + tributary area + Euler buckling\n';
+    p+='━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n';
+    p+='【輸入】\n';
+    p+='  H = '+f2(H)+' m, γ = '+f2(gamma)+' kN/m³, 土壤類型 = '+soilLabel+'\n';
+    if(soil==='sand'){p+='  φ = '+f2(phi)+'°\n';}
+    if(soil==='softClay'){p+='  Su = '+f2(Su)+' kPa, Cmax = '+f2(clamp(softCap,0.2,0.4))+'\n';}
+    if(soil==='hardClay'){p+='  C = '+f2(clamp(hardC,0.2,0.4))+'\n';}
+    p+='  支撐水平間距 S = '+f2(S)+' m\n';
+    p+='  A = '+f2(A)+' cm², r = '+f2(r)+' cm, Lk = '+f2(Lk)+' m, Fy = '+f2(Fy)+' MPa, E = '+f2(E)+' MPa, FS = '+f2(FS)+'\n\n';
+    p+='【一】表觀土壓力包絡線\n';
+    if(soil==='sand'){
+      p+='  Ka = tan²(45° - φ/2) = tan²(45° - '+f2(phi/2)+'°) = '+f3(pressureData.Ka)+'\n';
+      p+='  Pa = 0.65 × Ka × γ × H = 0.65 × '+f3(pressureData.Ka)+' × '+f2(gamma)+' × '+f2(H)+' = '+f2(Pa)+' kPa\n';
+    }else if(soil==='softClay'){
+      p+='  Ns = γH / Su = '+f2(gamma)+' × '+f2(H)+' / '+f2(Su)+' = '+f2(pressureData.Ns)+'\n';
+      if(pressureData.Ns<=4){
+        p+='  Ns ≤ 4，採 Pa = 0.2γH = 0.2 × '+f2(gamma)+' × '+f2(H)+' = '+f2(Pa)+' kPa\n';
+      }else if(pressureData.Ns<6){
+        var cSoft=0.2+(pressureData.Ns-4)*0.1;
+        p+='  4 < Ns < 6，線性插值得 C = '+f3(cSoft)+'\n';
+        p+='  Pa = CγH = '+f3(cSoft)+' × '+f2(gamma)+' × '+f2(H)+' = '+f2(Pa)+' kPa\n';
+      }else{
+        p+='  Ns ≥ 6，採 Pa = min(γH - 4Su, CmaxγH)\n';
+        p+='     = min('+f2(gamma)+' × '+f2(H)+' - 4 × '+f2(Su)+', '+f2(clamp(softCap,0.2,0.4))+' × '+f2(gamma)+' × '+f2(H)+')\n';
+        p+='     = min('+(f2(gamma*H-4*Su))+', '+f2(clamp(softCap,0.2,0.4)*gamma*H)+') = '+f2(Pa)+' kPa\n';
+      }
+    }else{
+      p+='  Pa = CγH = '+f2(clamp(hardC,0.2,0.4))+' × '+f2(gamma)+' × '+f2(H)+' = '+f2(Pa)+' kPa\n';
+    }
+    p+='  包絡線圖形化說明：地表至開挖底 '+f2(H)+' m 全深度採均佈矩形側壓 '+f2(Pa)+' kPa；\n';
+    p+='  各層支撐反力以相鄰支撐中點切分 tributary band，最上層上界為地表、最下層下界為開挖底。\n\n';
+    p+='【二】各層支撐分配（tributary area）\n';
+    rows.forEach(function(row){
+      p+='  第 '+row.level+' 層：\n';
+      p+='    tributary 區間 = '+f2(row.upper)+' ~ '+f2(row.lower)+' m，分配高度 h'+row.level+' = '+f2(row.tributary)+' m\n';
+      p+='    水平反力 R'+row.level+' = Pa × h'+row.level+' = '+f2(Pa)+' × '+f2(row.tributary)+' = '+f2(row.reaction)+' kN/m\n';
+      p+='    單支撐軸力 N'+row.level+' = R'+row.level+' × S = '+f2(row.reaction)+' × '+f2(S)+' = '+f2(row.axial)+' kN\n';
+    });
+    p+='  ΣR = '+f2(totalReaction)+' kN/m，應與 Pa × H = '+f2(Pa*H)+' kN/m 相同（平衡檢核）\n\n';
+    p+='【三】挫屈檢核（Euler）\n';
+    p+='  A = '+f2(A)+' cm² = '+f2(A_mm2)+' mm²\n';
+    p+='  r = '+f2(r)+' cm = '+f2(r_mm)+' mm\n';
+    p+='  Lk = '+f2(Lk)+' m = '+f2(Lk_mm)+' mm\n';
+    p+='  I = A × r² = '+f2(A_mm2)+' × '+f2(r_mm)+'² = '+f2(I_mm4)+' mm⁴\n';
+    p+='  Pcr = π²EI / Lk² = π² × '+f2(E)+' × '+f2(I_mm4)+' / '+f2(Lk_mm)+'² = '+f2(Pcr)+' kN\n';
+    p+='  Pallow = Pcr / FS = '+f2(Pcr)+' / '+f2(FS)+' = '+f2(Pallow)+' kN\n';
+    p+='  Py（參考）= A × Fy = '+f2(A_mm2)+' × '+f2(Fy)+' / 1000 = '+f2(Py)+' kN\n';
+    p+='  細長比 λ = Lk / r = '+f2(Lk_mm)+' / '+f2(r_mm)+' = '+f1(slenderness)+'\n\n';
+    p+='【四】判定\n';
+    p+='  最大需求軸力 Nmax = '+f2(maxAxial)+' kN\n';
+    p+='  容許壓力 Pallow = '+f2(Pallow)+' kN\n';
+    p+='  Nmax '+(ok?'≤':'＞')+' Pallow → '+(ok?'OK ✓':'NG ✗')+'\n\n';
+    p+='【備註】\n';
+    p+='  1. 本工具以簡化表觀土壓包絡線做初步設計，未含地下水、施工偏心、預壓損失、角隅效應與施工階段修正。\n';
+    p+='  2. Euler 挫屈適用細長受壓構件；若需正式設計，應再依鋼結構規範檢討容許壓應力、節點偏心及接頭能力。\n';
+    p+='━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
+    document.getElementById('esd-proc-text').textContent=p;
+    document.getElementById('esd-proc').style.display='';
+    if(window.innerWidth<768){var b=document.getElementById('mobTab-esd-r');if(b)switchMobTab('esd-r',b);}
+  }catch(err){
+    document.getElementById('esd-result').innerHTML='<p class="ng">'+err.message+'</p>';
+    document.getElementById('esd-proc').style.display='none';
+  }
+}
+
+renderSupportRows(true);
+updateSoilUI();
+calcESD();
+</script>
+<script>
+window.jrhDocMeta={
+  "doc":"深開挖水平支撐(型鋼支撐)軸力計算書",
+  "codes":[
+    "Peck, R. B. (1969), Deep Excavations and Tunneling in Soft Ground",
+    "表觀土壓力包絡線法（apparent earth pressure diagram）",
+    "Euler buckling formula: Pcr = π²EI / Lk²"
+  ],
+  "notes":[
+    "本工具適用多層水平支撐之深開挖初步估算，採 Peck (1969) 表觀土壓力包絡線與 tributary area 法分配各層支撐反力。",
+    "砂土採 Pa = 0.65KaγH；軟黏土依穩定係數 Ns 分段選用 0.2γH 至 0.4γH 或 γH-4Su 上限；硬黏土採 CγH，C 建議介於 0.2~0.4。",
+    "支撐軸力計算未含地下水、施工荷載偏心、初撐預壓損失、平面角隅效應及施工階段時序效應，正式設計應由大地工程師配合監測資料修正。",
+    "挫屈檢核採 Euler 公式做細長壓桿近似，正式設計仍應依鋼結構設計規範檢討容許壓應力、節點偏心、接頭與腹撐系統能力。",
+    "本計算書僅供方案比較與初步設計參考，正式送審文件應經大地與結構工程專業技師複核簽證。"
+  ]
+};
+</script>
+</body>
+</html>
