@@ -435,6 +435,20 @@ function calcESD(){
 renderSupportRows(true);
 updateSoilUI();
 calcESD();
+
+/* 懸臂式連續壁入土深度設計跟本工具常是同一個開挖案的前後步驟（先定入土
+   深度，若非懸臂式再做支撐挫屈檢核），開挖深度/土壤參數是同一組數字。 */
+function jrhTryInbound(){
+  if(!(window.JRH && JRH.showInboundBanner))return;
+  JRH.showInboundBanner('dwd','懸臂式連續壁入土深度設計',function(data){
+    document.getElementById('esd-H').value=data.H;
+    document.getElementById('esd-gamma').value=data.gamma;
+    document.getElementById('esd-phi').value=data.phi;
+    calcESD();
+  });
+}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',jrhTryInbound);
+else jrhTryInbound();
 </script>
 <script>
 window.jrhDocMeta={
