@@ -165,7 +165,6 @@
 
     <div class="row2">
       <div><label>支撐水平間距 S (m，支柱間距)</label><input id="esd-sh" type="number" value="6" step="0.1" min="0.5"></div>
-      <div><label>安全係數 FSbuckling</label><input id="esd-fs" type="number" value="1.67" step="0.01" min="1.1"></div>
     </div>
 
     <div class="sec">各層支撐深度</div>
@@ -183,7 +182,7 @@
     </div>
 
     <button class="calc-btn" onclick="calcESD()">計算支撐軸力與挫屈</button>
-    <div class="note">預設範例：H=12m、砂土 φ=30°、γ=18kN/m³、3 層支撐深度 3/6/9m、水平間距 6m、A=90cm²、r=5cm、Lk=4m、Fy=250MPa、E=200000MPa、FS=1.67。</div>
+    <div class="note">預設範例：H=12m、砂土 φ=30°、γ=18kN/m³、3 層支撐深度 3/6/9m、水平間距 6m、A=90cm²、r=5cm、Lk=4m、Fy=250MPa、E=200000MPa（挫屈容許壓應力採 AISC-ASD 公式計算，含彈性/非彈性轉換之內建安全係數，無須另填 FS）。</div>
     <div class="diagram-note">Peck 表觀土壓力包絡線於本工具以「全深度均佈壓力」處理：砂土採矩形包絡線 `Pa = 0.65KaγH`；軟黏土依 `Ns = γH/Su` 分段選用 `0.2γH ~ 0.4γH` 或 `γH - 4Su` 上限；硬黏土採 `CγH`。各層支撐反力由相鄰層中點切分 tributary band，再乘上支撐水平間距換算單支撐軸力。</div>
   </div>
 
@@ -285,8 +284,8 @@ function calcESD(){
     var H=v('esd-H'), gamma=v('esd-gamma'), soil=document.getElementById('esd-soil').value;
     var phi=v('esd-phi'), Su=v('esd-su'), softCap=v('esd-soft-cap'), hardC=v('esd-hard-c');
     var n=Math.max(1,Math.round(v('esd-n'))||1), S=v('esd-sh');
-    var A=v('esd-A'), r=v('esd-r'), Lk=v('esd-Lk'), Fy=v('esd-Fy'), E=v('esd-E'), FS=v('esd-fs');
-    if(H<=0||gamma<=0||S<=0||A<=0||r<=0||Lk<=0||Fy<=0||E<=0||FS<=1){throw new Error('請確認所有幾何與材料輸入值均為正值，且 FS > 1。');}
+    var A=v('esd-A'), r=v('esd-r'), Lk=v('esd-Lk'), Fy=v('esd-Fy'), E=v('esd-E');
+    if(H<=0||gamma<=0||S<=0||A<=0||r<=0||Lk<=0||Fy<=0||E<=0){throw new Error('請確認所有幾何與材料輸入值均為正值。');}
     if(soil==='sand'&&phi<=0){throw new Error('砂土需輸入 φ > 0。');}
     if(soil==='softClay'&&Su<=0){throw new Error('軟黏土需輸入 Su > 0。');}
     var supports=getSupportDepths(n,H);
@@ -319,10 +318,18 @@ function calcESD(){
     var r_mm=r*10;
     var Lk_mm=Lk*1000;
     var I_mm4=A_mm2*r_mm*r_mm;
+    var slenderness=Lk_mm/r_mm;
+    var Cc=Math.sqrt(2*Math.PI*Math.PI*E/Fy);
+    var Fa;
+    if(slenderness<=Cc){
+      var tRatio=slenderness/Cc;
+      Fa=(1-tRatio*tRatio/2)*Fy/(5/3+3*tRatio/8-tRatio*tRatio*tRatio/8);
+    }else{
+      Fa=12*Math.PI*Math.PI*E/(23*slenderness*slenderness);
+    }
     var Pcr=Math.PI*Math.PI*E*I_mm4/(Lk_mm*Lk_mm)/1000;
     var Py=A_mm2*Fy/1000;
-    var Pallow=Pcr/FS;
-    var slenderness=Lk_mm/r_mm;
+    var Pallow=Fa*A_mm2/1000;
     var ok=maxAxial<=Pallow;
 
     var soilLabel=soil==='sand'?'砂土':(soil==='softClay'?'軟黏土':'硬黏土');
@@ -340,8 +347,10 @@ function calcESD(){
     html+='<tr><td>土壤類型 / 包絡線</td><td>'+soilLabel+'<br>'+pressureData.note+'</td></tr>';
     html+='<tr><td>表觀土壓力 Pa</td><td>'+f2(Pa)+' kPa<br><span style="font-size:12px;color:#666">'+paText+'</span></td></tr>';
     html+='<tr><td>總側向荷重（每延米牆）</td><td>'+f2(Pa*H)+' kN/m</td></tr>';
-    html+='<tr><td>Euler 臨界挫屈力 Pcr</td><td>'+f2(Pcr)+' kN</td></tr>';
-    html+='<tr><td>容許壓力 Pallow = Pcr / FS</td><td>'+f2(Pallow)+' kN</td></tr>';
+    html+='<tr><td>臨界細長比 Cc</td><td>'+f2(Cc)+'</td></tr>';
+    html+='<tr><td>容許壓應力 Fa（AISC-ASD）</td><td>'+f2(Fa)+' MPa</td></tr>';
+    html+='<tr><td>容許壓力 Pallow = Fa × A</td><td>'+f2(Pallow)+' kN</td></tr>';
+    html+='<tr><td>Euler 臨界挫屈力 Pcr（參考）</td><td>'+f2(Pcr)+' kN</td></tr>';
     html+='<tr><td>降伏軸力 Py = A·Fy（參考）</td><td>'+f2(Py)+' kN</td></tr>';
     html+='<tr><td>細長比 λ = Lk / r</td><td>'+f1(slenderness)+'</td></tr>';
     html+='<tr><td>最大單支撐軸力需求</td><td>'+f2(maxAxial)+' kN</td></tr>';
@@ -375,7 +384,7 @@ function calcESD(){
     if(soil==='softClay'){p+='  Su = '+f2(Su)+' kPa, Cmax = '+f2(clamp(softCap,0.2,0.4))+'\n';}
     if(soil==='hardClay'){p+='  C = '+f2(clamp(hardC,0.2,0.4))+'\n';}
     p+='  支撐水平間距 S = '+f2(S)+' m\n';
-    p+='  A = '+f2(A)+' cm², r = '+f2(r)+' cm, Lk = '+f2(Lk)+' m, Fy = '+f2(Fy)+' MPa, E = '+f2(E)+' MPa, FS = '+f2(FS)+'\n\n';
+    p+='  A = '+f2(A)+' cm², r = '+f2(r)+' cm, Lk = '+f2(Lk)+' m, Fy = '+f2(Fy)+' MPa, E = '+f2(E)+' MPa\n\n';
     p+='【一】表觀土壓力包絡線\n';
     if(soil==='sand'){
       p+='  Ka = tan²(45° - φ/2) = tan²(45° - '+f2(phi/2)+'°) = '+f3(pressureData.Ka)+'\n';
@@ -406,22 +415,29 @@ function calcESD(){
       p+='    單支撐軸力 N'+row.level+' = R'+row.level+' × S = '+f2(row.reaction)+' × '+f2(S)+' = '+f2(row.axial)+' kN\n';
     });
     p+='  ΣR = '+f2(totalReaction)+' kN/m，應與 Pa × H = '+f2(Pa*H)+' kN/m 相同（平衡檢核）\n\n';
-    p+='【三】挫屈檢核（Euler）\n';
+    p+='【三】挫屈檢核（AISC-ASD 容許壓應力法）\n';
     p+='  A = '+f2(A)+' cm² = '+f2(A_mm2)+' mm²\n';
     p+='  r = '+f2(r)+' cm = '+f2(r_mm)+' mm\n';
     p+='  Lk = '+f2(Lk)+' m = '+f2(Lk_mm)+' mm\n';
-    p+='  I = A × r² = '+f2(A_mm2)+' × '+f2(r_mm)+'² = '+f2(I_mm4)+' mm⁴\n';
-    p+='  Pcr = π²EI / Lk² = π² × '+f2(E)+' × '+f2(I_mm4)+' / '+f2(Lk_mm)+'² = '+f2(Pcr)+' kN\n';
-    p+='  Pallow = Pcr / FS = '+f2(Pcr)+' / '+f2(FS)+' = '+f2(Pallow)+' kN\n';
-    p+='  Py（參考）= A × Fy = '+f2(A_mm2)+' × '+f2(Fy)+' / 1000 = '+f2(Py)+' kN\n';
-    p+='  細長比 λ = Lk / r = '+f2(Lk_mm)+' / '+f2(r_mm)+' = '+f1(slenderness)+'\n\n';
+    p+='  細長比 λ = Lk / r = '+f2(Lk_mm)+' / '+f2(r_mm)+' = '+f1(slenderness)+'\n';
+    p+='  Cc = √(2π²E/Fy) = √(2×π²×'+f2(E)+'/'+f2(Fy)+') = '+f2(Cc)+'\n';
+    if(slenderness<=Cc){
+      p+='  λ ≤ Cc（非彈性挫屈）：\n';
+      p+='  Fa = [1-λ²/(2Cc²)]×Fy / [5/3+3λ/(8Cc)-λ³/(8Cc³)] = '+f2(Fa)+' MPa\n';
+    }else{
+      p+='  λ > Cc（彈性挫屈）：\n';
+      p+='  Fa = 12π²E/(23λ²) = '+f2(Fa)+' MPa\n';
+    }
+    p+='  Pallow = Fa × A = '+f2(Fa)+' × '+f2(A_mm2)+' / 1000 = '+f2(Pallow)+' kN\n';
+    p+='  Pcr（Euler，參考）= π²EI/Lk² = '+f2(Pcr)+' kN\n';
+    p+='  Py（參考）= A × Fy = '+f2(A_mm2)+' × '+f2(Fy)+' / 1000 = '+f2(Py)+' kN\n\n';
     p+='【四】判定\n';
     p+='  最大需求軸力 Nmax = '+f2(maxAxial)+' kN\n';
     p+='  容許壓力 Pallow = '+f2(Pallow)+' kN\n';
     p+='  Nmax '+(ok?'≤':'＞')+' Pallow → '+(ok?'OK ✓':'NG ✗')+'\n\n';
     p+='【備註】\n';
     p+='  1. 本工具以簡化表觀土壓包絡線做初步設計，未含地下水、施工偏心、預壓損失、角隅效應與施工階段修正。\n';
-    p+='  2. Euler 挫屈適用細長受壓構件；若需正式設計，應再依鋼結構規範檢討容許壓應力、節點偏心及接頭能力。\n';
+    p+='  2. 挫屈檢核採 AISC-ASD 容許壓應力公式（含彈性/非彈性轉換），較單純 Euler 公式更能反映短柱降伏控制之情形；若需正式設計，應再依鋼結構規範檢討節點偏心及接頭能力。\n';
     p+='━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
     document.getElementById('esd-proc-text').textContent=p;
     document.getElementById('esd-proc').style.display='';
@@ -456,13 +472,13 @@ window.jrhDocMeta={
   "codes":[
     "Peck, R. B. (1969), Deep Excavations and Tunneling in Soft Ground",
     "表觀土壓力包絡線法（apparent earth pressure diagram）",
-    "Euler buckling formula: Pcr = π²EI / Lk²"
+    "AISC ASD column formula: Fa（含 Cc 彈性/非彈性轉換）"
   ],
   "notes":[
     "本工具適用多層水平支撐之深開挖初步估算，採 Peck (1969) 表觀土壓力包絡線與 tributary area 法分配各層支撐反力。",
     "砂土採 Pa = 0.65KaγH；軟黏土依穩定係數 Ns 分段選用 0.2γH 至 0.4γH 或 γH-4Su 上限；硬黏土採 CγH，C 建議介於 0.2~0.4。",
     "支撐軸力計算未含地下水、施工荷載偏心、初撐預壓損失、平面角隅效應及施工階段時序效應，正式設計應由大地工程師配合監測資料修正。",
-    "挫屈檢核採 Euler 公式做細長壓桿近似，正式設計仍應依鋼結構設計規範檢討容許壓應力、節點偏心、接頭與腹撐系統能力。",
+    "挫屈檢核採 AISC-ASD 容許壓應力公式（Cc=√(2π²E/Fy)，λ≤Cc 時為非彈性轉換式，λ>Cc 時 Fa=12π²E/23λ²），較單純 Euler 公式更能反映短柱降伏控制之情形；正式設計仍應依鋼結構設計規範檢討節點偏心、接頭與腹撐系統能力。",
     "本計算書僅供方案比較與初步設計參考，正式送審文件應經大地與結構工程專業技師複核簽證。"
   ]
 };
